@@ -18,7 +18,7 @@
     <div id="canvas"></div>
     <h3>VCF here:</h3>
     <div id="variation_plot"></div>
-    <form>
+    <form name="search">
         <label for="chrId">Chromosome</label>
         <input name="chrId" type="text" id="chrId">
         <label for="from">From</label>
@@ -26,6 +26,9 @@
         <label for="to">To</label>
         <input name="to" type="text" id="to">
         <button id="search">Search</button>
+        <button id="zoom_in">+</button>
+        <button id="zoom_out">-</button>
+        <input id="zoom" type="text" size="2" disabled="true">
     </form>
 </body>
 </html>

@@ -18,3 +18,7 @@
     font-size: 11px;
     fill: black;
 }
+
+div#variation_plot {
+    overflow: auto;
+}
