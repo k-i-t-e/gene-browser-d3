@@ -68,34 +68,26 @@ public class VCFManager {
     }
 
     public List<Variant> readVcf(String chrId, int from, int to) throws IOException {
-        VCFCodec codec = new VCFCodec();    // htsjdk / picard
-
-        //File indexFile = new File("Felis_catus.vcf");
-        //IntervalTreeIndex intervalTreeIndex = IndexFactory.createIntervalIndex(indexFile, codec);
+        VCFCodec codec = new VCFCodec();
 
         File indexFile = new File("Felis_catus.vcf.gz.tbi");
         TabixIndex tabixIndex = new TabixIndex(indexFile);
 
         FeatureReader<VariantContext> reader = AbstractFeatureReader.getFeatureReader("Felis_catus.vcf", codec, tabixIndex);
 
-        /*              doesn't work with gzipped
-        * nested exception is htsjdk.tribble.TribbleException: Line 15: there aren't enough columns for line �W�����K��� On���>�ܧ����W���ѽ�M��#֧�}{�x�_\�3�_��n%x�^Z�4�·|�淏��i��~��(֛_�R�w������$yk|�_����!�G���4��?��S� ��6��c����G%yk���>ܯ����I_2 (we expected 9 tokens, and saw 1 ), for input source: Felis_catus.vcf.gz] with root cause
-htsjdk.tribble.TribbleException: Line 15: there aren't enough columns for line �W�����K��� On���>�ܧ����W���ѽ�M��#֧�}{�x�_\�3�_��n%x�^Z�4�·|�淏��i��~��(֛_�R�w������$yk|�_����!�G���4��?��S� ��6��c����G%yk���>ܯ����I_2 (we expected 9 tokens, and saw 1 ), for input source: Felis_catus.vcf.gz
-        * */
-
         CloseableTribbleIterator<VariantContext> iterator = reader.iterator();
 
-        iterator = reader.query(chrId, from, to); //"A1", 2772000, 2774500
+        iterator = reader.query(chrId, from, to);
 
         ArrayList<Variant> variants = new ArrayList<>();
         int i = 0;
         while (iterator.hasNext()) {
             VariantContext context = iterator.next();
-            if (i % 10 == 0) {
+            //if (i % 10 == 0) {
                 String ref = context.getReference().getDisplayString();
                 List<String> alt = context.getAlternateAlleles().stream().map(Allele::getDisplayString).collect(Collectors.toList());
                 variants.add(new Variant((long) context.getStart(), ref, alt));
-            }
+            //}
             i++;
         }
 

@@ -39,7 +39,7 @@ $(function() {
     function drawVcf(data, update) {
         var xScale = d3.scale.linear()
             .domain([
-                d3.min(data, position),
+                d3.min(data, position), //0
                 d3.max(data, position)
             ])
             .range([0, W - padding]);
@@ -144,20 +144,26 @@ $(function() {
     $("button#zoom_in").on("click", function(e) {
         e.preventDefault();
         zoom++;
-        W = $("body").width() * zoom;
+        //W = $("body").width() * zoom;
         $("#zoom").val(zoom);
-        d3.select("div#variation_plot").select("svg").attr("width", W);
-        drawVcf(vcfData, true);
+        //d3.select("div#variation_plot").select("svg").attr("width", W);
+        var to = $('#to').val() / 2;
+        $('#to').val(to.toFixed());
+        loadVariations($('#chrId').val(), $('#from').val(), to.toFixed(), true);
+        //drawVcf(vcfData, true);
     });
 
     $("button#zoom_out").on("click", function(e) {
         e.preventDefault();
         if (zoom > 1) {
             zoom--;
-            W = $("body").width() * zoom;
+            //W = $("body").width() * zoom;
             $("#zoom").val(zoom);
-            d3.select("div#variation_plot").select("svg").attr("width", W);
-            drawVcf(vcfData, true);
+            var to = $('#to').val() * 2;
+            $('#to').val(to);
+            //d3.select("div#variation_plot").select("svg").attr("width", W);
+            loadVariations($('#chrId').val(), $('#from').val(), to, true);
+            //drawVcf(vcfData, true);
         }
     });
 });
