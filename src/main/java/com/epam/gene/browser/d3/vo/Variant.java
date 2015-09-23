@@ -1,5 +1,7 @@
 package com.epam.gene.browser.d3.vo;
 
+import java.util.List;
+
 /**
  * Created with IntelliJ IDEA.
  * User: mmiroliubov
@@ -9,9 +11,9 @@ package com.epam.gene.browser.d3.vo;
 public class Variant {
     private Long position;
     private String ref;
-    private String alt;
+    private List<String> alt;
 
-    public Variant(Long position, String ref, String alt) {
+    public Variant(Long position, String ref, List<String> alt) {
         this.position = position;
         this.ref = ref;
         this.alt = alt;
@@ -33,11 +35,11 @@ public class Variant {
         this.ref = ref;
     }
 
-    public String getAlt() {
+    public List<String> getAlt() {
         return alt;
     }
 
-    public void setAlt(String alt) {
+    public void setAlt(List<String> alt) {
         this.alt = alt;
     }
 }

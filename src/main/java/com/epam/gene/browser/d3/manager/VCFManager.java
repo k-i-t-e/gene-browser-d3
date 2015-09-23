@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -87,13 +88,15 @@ htsjdk.tribble.TribbleException: Line 15: there aren't enough columns for line ï
         iterator = reader.query(chrId, from, to); //"A1", 2772000, 2774500
 
         ArrayList<Variant> variants = new ArrayList<>();
+        int i = 0;
         while (iterator.hasNext()) {
             VariantContext context = iterator.next();
-            String ref = context.getAlleles().stream().map(Allele::toString).reduce((s, s2) -> String.join(", ", s,
-                    s2)).get();
-            String alt = context.getAlternateAlleles().stream().map(Allele::toString).reduce((s, s2) -> String.join(", ", s,
-                    s2)).get();
-            variants.add(new Variant((long) context.getStart(), ref, alt));
+            if (i % 10 == 0) {
+                String ref = context.getReference().getDisplayString();
+                List<String> alt = context.getAlternateAlleles().stream().map(Allele::getDisplayString).collect(Collectors.toList());
+                variants.add(new Variant((long) context.getStart(), ref, alt));
+            }
+            i++;
         }
 
         return variants;
