@@ -4,6 +4,7 @@ import com.epam.gene.browser.d3.vo.Variant;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.CloseableTribbleIterator;
 import htsjdk.tribble.FeatureReader;
+import htsjdk.tribble.index.Index;
 import htsjdk.tribble.index.IndexFactory;
 import htsjdk.tribble.index.interval.IntervalTreeIndex;
 import htsjdk.tribble.index.tabix.TabixIndex;
@@ -70,10 +71,20 @@ public class VCFManager {
     public List<Variant> readVcf(String chrId, int from, int to) throws IOException {
         VCFCodec codec = new VCFCodec();
 
-        File indexFile = new File("Felis_catus.vcf.gz.tbi");
-        TabixIndex tabixIndex = new TabixIndex(indexFile);
+        String fileName = "Felis_catus.vcf";
 
-        FeatureReader<VariantContext> reader = AbstractFeatureReader.getFeatureReader("Felis_catus.vcf", codec, tabixIndex);
+        File indexFile = new File(fileName + ".idx");
+        Index index;
+        if (indexFile.exists() && !indexFile.isDirectory()) {
+            index = IndexFactory.loadIndex(fileName + ".idx");
+        } else {
+            index = createIndex(fileName, codec);
+        }
+
+        /*File indexFile = new File("Felis_catus.vcf.gz.tbi");
+        TabixIndex tabixIndex = new TabixIndex(indexFile);*/
+
+        FeatureReader<VariantContext> reader = AbstractFeatureReader.getFeatureReader(fileName, codec, index);
 
         CloseableTribbleIterator<VariantContext> iterator = reader.iterator();
 
@@ -92,5 +103,15 @@ public class VCFManager {
         }
 
         return variants;
+    }
+
+    private IntervalTreeIndex createIndex(String fileName, VCFCodec codec) throws IOException {
+        File file = new File(fileName);
+        IntervalTreeIndex intervalTreeIndex = IndexFactory.createIntervalIndex(file, codec); // Create an index
+
+        File indexFile = new File(fileName + ".idx");
+        IndexFactory.writeIndex(intervalTreeIndex, indexFile); // Write it to a file
+
+        return intervalTreeIndex;
     }
 }
