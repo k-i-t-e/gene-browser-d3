@@ -15,6 +15,8 @@ $(function() {
     var browseFrame = to - from;
     var minBigZoom = 5;
 
+    var leftBuffer, rightBuffer;
+
     var svgVcf = d3.select("div#variation_plot").append("svg").attr("width", W).attr("height", vcfH + axisPadding);
 
     function position(data) {
@@ -40,14 +42,56 @@ $(function() {
                 drawVcf(data, update);
             }
         });
+
+        //loadBuffers();
+    }
+
+    function loadBuffers() {
+        var fromBuf;
+        var toBuf;
+        if (to - 2 * browseFrame > 0) {
+            fromBuf = from - 2 * browseFrame;
+            toBuf = to - 2 * browseFrame;
+            $.ajax({
+                url: "/gene-browser/services/variants",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    chrId: chrId,
+                    from: fromBuf,
+                    to: toBuf,
+                    bigZoom: zoom > minBigZoom,
+                    width: W - padding
+                }),
+                success: function (data) {
+                    leftBuffer = data;
+                }
+            });
+
+        }
+
+        fromBuf = from + 2 * browseFrame;
+        toBuf = to + 2 * browseFrame;
+
+        $.ajax({
+            url: "/gene-browser/services/variants",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                chrId: chrId,
+                from: fromBuf,
+                to: toBuf,
+                bigZoom: zoom > minBigZoom,
+                width: W - padding
+            }),
+            success: function (data) {
+                rightBuffer = data;
+            }
+        });
     }
 
     function drawVcf(data, update) {
         var xScale = d3.scale.linear()
-            /*.domain([
-                d3.min(data, position), //0
-                d3.max(data, position)
-            ])*/
             .domain([from, to])
             .range([0, W - padding]);
 
@@ -193,7 +237,11 @@ $(function() {
         to += Math.ceil(browseFrame / 2);
         $('#to').val(to);
         $('#from').val(from);
-        loadVariations(chrId, from, to, true);
+        /*if (rightBuffer[rightBuffer.length - 1].position >= to) {
+            console.log("using cache");
+        } else {*/
+            loadVariations(chrId, from, to, true);
+        //}
     }
 
     function moveLeft() {
@@ -206,31 +254,32 @@ $(function() {
         }
     }
 
+    function _retreiveFromBuffer(buffer, right) {
+        var buf = [];
+        for (var i = 0; i < buffer.length; i++) {
+            if (right) {
+                if (buffer[i].position > to) {
+                    //buf.push(buffer[i]);
+                    buf = buffer.splice(0, i-1);
+                }
+            } else {
+                if (buffer[i].position < from && (i <= buffer[i].length - 2)) {
+                    //buf.push(buffer[i]);
+                    buf = buffer.splice(i + 1, buffer.length - 1);
+                }
+            }
+        }
+
+        //for (var i = 0; )
+    }
+
     $("button#zoom_out").on("click", function(e) {
         e.preventDefault();
-        /*if (zoom > 1) {
-            zoom--;
-            //W = $("body").width() * zoom;
-            $("#zoom").val(zoom);
-            var to = $('#to').val() * 2;
-            $('#to').val(to);
-            //d3.select("div#variation_plot").select("svg").attr("width", W);
-            loadVariations($('#chrId').val(), $('#from').val(), to, true);
-            //drawVcf(vcfData, true);
-        }*/
         zoomOut();
     });
 
     $("button#zoom_in").on("click", function(e) {
         e.preventDefault();
-        /*zoom++;
-         //W = $("body").width() * zoom;
-         $("#zoom").val(zoom);
-         //d3.select("div#variation_plot").select("svg").attr("width", W);
-         var to = $('#to').val() / 2;
-         $('#to').val(to.toFixed());
-         loadVariations($('#chrId').val(), $('#from').val(), to.toFixed(), true);
-         //drawVcf(vcfData, true);*/
         zoomIn();
     });
 

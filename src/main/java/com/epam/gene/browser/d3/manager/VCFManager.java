@@ -112,7 +112,6 @@ public class VCFManager {
             int from = request.getFrom();
             int to = from + count;
             boolean found = false;
-            int i = 0;
             while (iterator.hasNext()) {
                 VariantContext context = iterator.next();
 
@@ -135,7 +134,6 @@ public class VCFManager {
                     }
                     variants.add(new Variant((long) context.getStart(), ref, alt, hom));
                     found = true;
-                    i++;
                 }
             }
         }
