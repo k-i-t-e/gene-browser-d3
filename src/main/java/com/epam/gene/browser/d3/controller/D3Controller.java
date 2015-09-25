@@ -33,6 +33,6 @@ public class D3Controller {
     @RequestMapping(value = "variants", method = RequestMethod.POST)
     @ResponseBody
     public List<Variant> getVariants(@RequestBody BrowseRequest request) throws IOException {
-        return vcfManager.readVcf(request.getChrId(), request.getFrom(), request.getTo());
+        return vcfManager.readVcf(request);
     }
 }

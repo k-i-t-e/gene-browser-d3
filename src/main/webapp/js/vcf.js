@@ -13,6 +13,7 @@ $(function() {
     var axisPadding = 18;
     var vcfData;
     var browseFrame = to - from;
+    var minBigZoom = 5;
 
     var svgVcf = d3.select("div#variation_plot").append("svg").attr("width", W).attr("height", vcfH + axisPadding);
 
@@ -28,7 +29,9 @@ $(function() {
             data: JSON.stringify({
                 chrId: chrId,
                 from: from,
-                to: to
+                to: to,
+                bigZoom: zoom > minBigZoom,
+                width: W - padding
             }),
             success: function (data) {
                 console.log(data);
@@ -52,7 +55,7 @@ $(function() {
 
         // who enter
         var g = groups.enter().append("g").attr("class", "vcf");
-        var width = W / (to - from);
+        var width = zoom > minBigZoom ? W / (to - from) : 1;
 
         g.append("rect").attr({
             class:"ref",

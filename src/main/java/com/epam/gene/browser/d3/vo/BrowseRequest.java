@@ -10,6 +10,8 @@ public class BrowseRequest {
     private int from;
     private int to;
     private String chrId;
+    private int width;
+    private boolean bigZoom;
 
     public int getFrom() {
         return from;
@@ -33,5 +35,21 @@ public class BrowseRequest {
 
     public void setChrId(String chrId) {
         this.chrId = chrId;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public boolean isBigZoom() {
+        return bigZoom;
+    }
+
+    public void setBigZoom(boolean bigZoom) {
+        this.bigZoom = bigZoom;
     }
 }

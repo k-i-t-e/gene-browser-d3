@@ -1,5 +1,6 @@
 package com.epam.gene.browser.d3.manager;
 
+import com.epam.gene.browser.d3.vo.BrowseRequest;
 import com.epam.gene.browser.d3.vo.Variant;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.CloseableTribbleIterator;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -63,7 +65,7 @@ public class VCFManager {
         }
     }
 
-    public List<Variant> readVcf(String chrId, int from, int to) throws IOException {
+    public List<Variant> readVcf(BrowseRequest request) throws IOException {
         VCFCodec codec = new VCFCodec();
 
         String fileName = "Felis_catus.vcf";
@@ -84,13 +86,12 @@ public class VCFManager {
 
         CloseableTribbleIterator<VariantContext> iterator = reader.iterator();
 
-        iterator = reader.query(chrId, from, to);
+        iterator = reader.query(request.getChrId(), request.getFrom(), request.getTo());
 
         ArrayList<Variant> variants = new ArrayList<>();
-        int i = 0;
-        while (iterator.hasNext()) {
-            VariantContext context = iterator.next();
-            //if (i % 10 == 0) {
+        if (request.isBigZoom()) {
+            while (iterator.hasNext()) {
+                VariantContext context = iterator.next();
                 String ref = context.getReference().getDisplayString();
                 List<String> alt = context.getAlternateAlleles().stream().map(Allele::getDisplayString).collect(Collectors.toList());
                 List<Genotype> genotypes = context.getGenotypes();
@@ -105,8 +106,38 @@ public class VCFManager {
                 }
 
                 variants.add(new Variant((long) context.getStart(), ref, alt, hom));
-            //}
-            i++;
+            }
+        } else {
+            int count = (int) Math.ceil((request.getTo() - request.getFrom()) / (double) request.getWidth());
+            int from = request.getFrom();
+            int to = from + count;
+            boolean found = false;
+            int i = 0;
+            while (iterator.hasNext()) {
+                VariantContext context = iterator.next();
+
+                if (context.getStart() > to) {
+                    found = false;
+                    to += count;
+                }
+                if (!found) {
+                    String ref = context.getReference().getDisplayString();
+                    List<String> alt = context.getAlternateAlleles().stream().map(Allele::getDisplayString).collect(Collectors.toList());
+                    List<Genotype> genotypes = context.getGenotypes();
+
+                    boolean hom = false;
+                    if (genotypes.isEmpty()) {
+                        hom = true;
+                    } else {
+                        if (genotypes.get(0).isHom()) {
+                            hom = true;
+                        }
+                    }
+                    variants.add(new Variant((long) context.getStart(), ref, alt, hom));
+                    found = true;
+                    i++;
+                }
+            }
         }
 
         return variants;
