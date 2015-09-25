@@ -7,12 +7,10 @@ import htsjdk.tribble.FeatureReader;
 import htsjdk.tribble.index.Index;
 import htsjdk.tribble.index.IndexFactory;
 import htsjdk.tribble.index.interval.IntervalTreeIndex;
-import htsjdk.tribble.index.tabix.TabixIndex;
-import htsjdk.tribble.readers.TabixReader;
 import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
-import htsjdk.variant.vcf.VCFHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -20,10 +18,7 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
@@ -72,6 +67,7 @@ public class VCFManager {
         VCFCodec codec = new VCFCodec();
 
         String fileName = "Felis_catus.vcf";
+        //String fileName = "YRI.trio.2010_03.genotypes.vcf";
 
         File indexFile = new File(fileName + ".idx");
         Index index;
@@ -97,7 +93,18 @@ public class VCFManager {
             //if (i % 10 == 0) {
                 String ref = context.getReference().getDisplayString();
                 List<String> alt = context.getAlternateAlleles().stream().map(Allele::getDisplayString).collect(Collectors.toList());
-                variants.add(new Variant((long) context.getStart(), ref, alt));
+                List<Genotype> genotypes = context.getGenotypes();
+
+                boolean hom = false;
+                if (genotypes.isEmpty()) {
+                    hom = true;
+                } else {
+                    if (genotypes.get(0).isHom()) {
+                        hom = true;
+                    }
+                }
+
+                variants.add(new Variant((long) context.getStart(), ref, alt, hom));
             //}
             i++;
         }

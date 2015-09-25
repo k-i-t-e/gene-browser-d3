@@ -12,11 +12,13 @@ public class Variant {
     private Long position;
     private String ref;
     private List<String> alt;
+    private Boolean hom;
 
-    public Variant(Long position, String ref, List<String> alt) {
+    public Variant(Long position, String ref, List<String> alt, Boolean hom) {
         this.position = position;
         this.ref = ref;
         this.alt = alt;
+        this.hom = hom;
     }
 
     public Long getPosition() {
@@ -41,5 +43,13 @@ public class Variant {
 
     public void setAlt(List<String> alt) {
         this.alt = alt;
+    }
+
+    public Boolean getHom() {
+        return hom;
+    }
+
+    public void setHom(Boolean hom) {
+        this.hom = hom;
     }
 }

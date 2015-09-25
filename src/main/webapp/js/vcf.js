@@ -60,7 +60,7 @@ $(function() {
             x: function (data, i) {return xScale(data.position)},
             height: vcfH / 2,
             width: width > minWidth ? width : minWidth,
-            fill: "blue"
+            fill: "red"
         });
 
         g.append("rect")
@@ -70,8 +70,20 @@ $(function() {
                 x: function (data, i) {return xScale(data.position)},
                 height:vcfH / 2,
                 width: width > minWidth ? width : minWidth,
-                fill: "red"
+                fill: function (data) {return data.hom ? "red" : "blue"}
             });
+
+        g.append("text")
+            .attr({
+                class:"alt-label",
+                y:axisPadding + vcfH / 4,
+                x:function (data, i) {return xScale(data.position) + width/2},
+                fill:"white",
+                'font-size':width < 32 ? width.toFixed() + 'px' : 32 + 'px',
+                'font-family':'sans-serif',
+                'text-anchor':'middle'
+            })
+            .text(function(data) {return width > 1 ? data.alt[0] : ""});
 
         // who update
         g = groups;
@@ -83,7 +95,7 @@ $(function() {
             },
             height: vcfH / 2,
             width: width > minWidth ? width : minWidth,
-            fill: "blue"
+            fill: "red"
         });
 
         g.selectAll("rect.alt").attr({
@@ -92,8 +104,19 @@ $(function() {
             x: function (data, i) {return xScale(data.position)},
             height: vcfH / 2,
             width: width > minWidth ? width : minWidth,
-            fill: "red"
+            fill: function (data) {return data.hom ? "red" : "blue"}
         });
+
+        g.selectAll("text.alt-label")
+            .attr({
+                y:axisPadding + vcfH / 4,
+                x:function (data, i) {return xScale(data.position) + width/2},
+                fill:"white",
+                'font-size':width < 32 ? width.toFixed() + 'px' : 32 + 'px',
+                'font-family':'sans-serif',
+                'text-anchor':'middle'
+            })
+            .text(function(data) {return width > 1 ? data.alt[0] : ""});
 
         //who remove
         groups.exit().remove();
@@ -127,8 +150,8 @@ $(function() {
         });
     }
 
-    loadVariations("A1", from, to, false);
-    $('#chrId').val("A1");
+    loadVariations(chrId, from, to, false);
+    $('#chrId').val(chrId);
     $('#from').val(from);
     $('#to').val(to);
     $("#zoom").val(zoom);
