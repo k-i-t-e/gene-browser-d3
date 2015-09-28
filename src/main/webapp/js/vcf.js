@@ -14,8 +14,9 @@ $(function() {
     var vcfData;
     var browseFrame = to - from;
     var minBigZoom = 5;
+    var ENABLE_CACHING = true;
 
-    var leftBuffer, rightBuffer;
+    var leftBuffer = [], rightBuffer = [];
 
     var svgVcf = d3.select("div#variation_plot").append("svg").attr("width", W).attr("height", vcfH + axisPadding);
 
@@ -43,15 +44,17 @@ $(function() {
             }
         });
 
-        //loadBuffers();
+        if (ENABLE_CACHING) {
+            loadBuffers();
+        }
     }
 
     function loadBuffers() {
         var fromBuf;
         var toBuf;
-        if (to - 2 * browseFrame > 0) {
-            fromBuf = from - 2 * browseFrame;
-            toBuf = to - 2 * browseFrame;
+        if (from - 3 * browseFrame > 0) {
+            fromBuf = from - 3 * browseFrame;
+            toBuf = from;
             $.ajax({
                 url: "/gene-browser/services/variants",
                 method: "POST",
@@ -70,8 +73,8 @@ $(function() {
 
         }
 
-        fromBuf = from + 2 * browseFrame;
-        toBuf = to + 2 * browseFrame;
+        fromBuf = to;
+        toBuf = to + 3 * browseFrame;
 
         $.ajax({
             url: "/gene-browser/services/variants",
@@ -237,11 +240,13 @@ $(function() {
         to += Math.ceil(browseFrame / 2);
         $('#to').val(to);
         $('#from').val(from);
-        /*if (rightBuffer[rightBuffer.length - 1].position >= to) {
+        if (rightBuffer.length > 0 && rightBuffer[rightBuffer.length - 1].position >= to && ENABLE_CACHING) {
             console.log("using cache");
-        } else {*/
+            _retreiveFromBuffer(true);
+            drawVcf(vcfData, true);
+        } else {
             loadVariations(chrId, from, to, true);
-        //}
+        }
     }
 
     function moveLeft() {
@@ -250,27 +255,74 @@ $(function() {
             to -= Math.ceil(browseFrame / 2);
             $('#to').val(to);
             $('#from').val(from);
-            loadVariations(chrId, from, to, true);
+            if (leftBuffer.length > 0 && leftBuffer[0].position <= from && ENABLE_CACHING) {
+                console.log("using cache");
+                _retreiveFromBuffer(false);
+                drawVcf(vcfData, true);
+            } else {
+                loadVariations(chrId, from, to, true);
+            }
         }
     }
 
-    function _retreiveFromBuffer(buffer, right) {
-        var buf = [];
+    function _retreiveFromBuffer(right) {
+        var buffer = right ? rightBuffer : leftBuffer;
+        var fromBuf = []; // what comes from buffer
+        var toBuf = []; // what comes back to buffer
         for (var i = 0; i < buffer.length; i++) {
             if (right) {
                 if (buffer[i].position > to) {
-                    //buf.push(buffer[i]);
-                    buf = buffer.splice(0, i-1);
+                    if (i > 2) {
+                        buffer.splice(0, i-1).forEach(function(item) { fromBuf.push(item) });
+                    } else {
+                        buffer.splice(0, 1).forEach(function(item) { fromBuf.push(item) });
+                    }
+                    break;
                 }
             } else {
-                if (buffer[i].position < from && (i <= buffer[i].length - 2)) {
-                    //buf.push(buffer[i]);
-                    buf = buffer.splice(i + 1, buffer.length - 1);
+                if (buffer[i].position > from) {
+                    if (i > 0) {
+                        buffer.splice(i-1, buffer.length).forEach(function(item) {
+                            fromBuf.push(item);
+                        });
+                    } else {
+                        fromBuf = buffer;
+                        buffer = [];
+                    }
+                    break;
                 }
             }
         }
 
-        //for (var i = 0; )
+        for (i = 0; i < vcfData.length; i++) {
+            if (right) {
+                if (vcfData[i].position > from) {
+                    if (i > 2) {
+                        vcfData.splice(0, i - 1).forEach(function(item) { toBuf.push(item) });
+                    } else {
+                        vcfData.splice(0, 1).forEach(function(item) { toBuf.push(item) });
+                    }
+                    break;
+                }
+            } else {
+                if (vcfData[i].position > to) {
+                    if (i > 0) {
+                        vcfData.splice(i - 1, vcfData.length).forEach(function(item) { toBuf.push(item) });
+                    } else {
+                        toBuf = vcfData;
+                        vcfData = [];
+                    }
+                    break;
+                }
+            }
+        }
+
+        vcfData = vcfData.concat(fromBuf);
+        if (right) {
+            leftBuffer = leftBuffer.concat(toBuf);
+        } else{
+            rightBuffer = rightBuffer.concat(toBuf);
+        }
     }
 
     $("button#zoom_out").on("click", function(e) {
