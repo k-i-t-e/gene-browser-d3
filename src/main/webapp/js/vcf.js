@@ -4,7 +4,7 @@
 // Here goes vcfPlot
 
 $(function() {
-    var vcfH = 100;
+    var vcfH = 50;
     var zoom = 1;
     var from = 0, to = 239107476, chrId = "A1";
     var W = $("body").width();
@@ -108,12 +108,27 @@ $(function() {
             class:"ref",
             y: axisPadding,
             x: function (data, i) {return xScale(data.position)},
-            height: vcfH / 2,
+            height: function(data) {return data.hom ? vcfH : vcfH / 2},
             width: width > minWidth ? width : minWidth,
             fill: "red"
         });
 
-        g.append("rect")
+        g.datum(function(d) {
+            if (!d.hom) {
+                var _g = d3.select(this);
+                _g.append("rect")
+                    .attr({
+                        class:"alt",
+                        y: vcfH / 2 + axisPadding,
+                        x: function (data, i) {return xScale(data.position)},
+                        height:vcfH / 2,
+                        width: width > minWidth ? width : minWidth,
+                        fill: "blue"
+                    });
+            }
+            return d;
+        });
+        /*g.append("rect")
             .attr({
                 class:"alt",
                 y: vcfH / 2 + axisPadding,
@@ -121,7 +136,7 @@ $(function() {
                 height:vcfH / 2,
                 width: width > minWidth ? width : minWidth,
                 fill: function (data) {return data.hom ? "red" : "blue"}
-            });
+            });*/
 
         g.append("text")
             .attr({
@@ -143,7 +158,7 @@ $(function() {
             x: function (data, i) {
                 return xScale(data.position);
             },
-            height: vcfH / 2,
+            height: function(data) {return data.hom ? vcfH : vcfH / 2},
             width: width > minWidth ? width : minWidth,
             fill: "red"
         });
@@ -209,10 +224,10 @@ $(function() {
     $("button#search").on("click", function(e) {
         e.preventDefault();
         chrId = $('#chrId').val();
-        from = $('#from').val();
-        to = $('#to').val();
+        from = parseInt($('#from').val());
+        to = parseInt($('#to').val());
 
-        loadVariations(chrId, from, to, false);
+        loadVariations(chrId, from, to, true);
     });
 
     function zoomIn() {
