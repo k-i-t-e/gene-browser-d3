@@ -64,7 +64,7 @@ $(function() {
                     from: fromBuf,
                     to: toBuf,
                     bigZoom: zoom > minBigZoom,
-                    width: W - padding
+                    width: (W - padding) * 3
                 }),
                 success: function (data) {
                     leftBuffer = data;
@@ -85,7 +85,7 @@ $(function() {
                 from: fromBuf,
                 to: toBuf,
                 bigZoom: zoom > minBigZoom,
-                width: W - padding
+                width: (W - padding) * 3
             }),
             success: function (data) {
                 rightBuffer = data;
