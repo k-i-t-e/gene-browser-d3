@@ -15,26 +15,26 @@
     <button id="add">Add value</button>
     <button id="remove">Remove value</button>
     <div id="canvas"></div>-->
-    <div id="variation_plot"></div>
+    <div class="variation_plot"></div>
     <form name="search">
-        <label for="chrId">Chromosome</label>
-        <input name="chrId" type="text" id="chrId">
-        <label for="from">From</label>
-        <input name="frpm" type="text" id="from">
-        <label for="to">To</label>
-        <input name="to" type="text" id="to">
-        <button id="search">Search</button>
-        <button id="zoom_in">+</button>
-        <button id="zoom_out">-</button>
-        <input id="zoom" type="text" size="2" disabled="true">
-        <button id="moveLeft">&lt;</button>
-        <button id="moveRight">&gt;</button>
+        <label>Chromosome</label>
+        <input name="chrId" type="text" class="chrId">
+        <label>From</label>
+        <input name="from" type="text" class="from">
+        <label>To</label>
+        <input name="to" type="text" class="to">
+        <button class="search">Search</button>
+        <button class="zoom_in">+</button>
+        <button class="zoom_out">-</button>
+        <input class="zoom" type="text" size="2" disabled="true">
+        <button class="moveLeft">&lt;</button>
+        <button class="moveRight">&gt;</button>
     </form>
 
-    <div id="tooltip" class="hidden">
-        <p><span>Position:&nbsp;</span><span id="pos"></span></p>
-        <p><span>Reference:&nbsp;</span><span id="ref"></span></p>
-        <p><span>Alternate:&nbsp;</span><span id="alt"></span></p>
+    <div class="tooltip hidden">
+        <p><span>Position:&nbsp;</span><span class="pos"></span></p>
+        <p><span>Reference:&nbsp;</span><span class="ref-tooltip"></span></p>
+        <p><span>Alternate:&nbsp;</span><span class="alt-tooltip"></span></p>
     </div>
 </body>
 </html>

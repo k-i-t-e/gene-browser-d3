@@ -18,7 +18,7 @@ $(function() {
 
     var leftBuffer = [], rightBuffer = [];
 
-    var svgVcf = d3.select("div#variation_plot").append("svg").attr("width", W).attr("height", vcfH + axisPadding);
+    var svgVcf = d3.select("div.variation_plot").append("svg").attr("width", W).attr("height", vcfH + axisPadding);
 
     function position(data) {
         return data.position;
@@ -50,6 +50,7 @@ $(function() {
     }
 
     function loadBuffers() {
+        var bufferC = zoom > minBigZoom ? 5 : 3;
         var fromBuf;
         var toBuf;
         if (from - 3 * browseFrame > 0) {
@@ -64,7 +65,7 @@ $(function() {
                     from: fromBuf,
                     to: toBuf,
                     bigZoom: zoom > minBigZoom,
-                    width: (W - padding) * 3
+                    width: (W - padding) * bufferC
                 }),
                 success: function (data) {
                     leftBuffer = data;
@@ -85,7 +86,7 @@ $(function() {
                 from: fromBuf,
                 to: toBuf,
                 bigZoom: zoom > minBigZoom,
-                width: (W - padding) * 3
+                width: (W - padding) * bufferC
             }),
             success: function (data) {
                 rightBuffer = data;
@@ -109,7 +110,7 @@ $(function() {
             y: axisPadding,
             x: function (data, i) {return xScale(data.position)},
             height: function(data) {return data.hom ? vcfH : vcfH / 2},
-            width: width > minWidth ? width : minWidth,
+            width: function(data) {return width > minWidth ? (zoom > minBigZoom ? data.alt[0].length : 1) * width : minWidth},
             fill: "red"
         });
 
@@ -122,7 +123,7 @@ $(function() {
                         y: vcfH / 2 + axisPadding,
                         x: function (data, i) {return xScale(data.position)},
                         height:vcfH / 2,
-                        width: width > minWidth ? width : minWidth,
+                        width: function(data) {return width > minWidth ? (zoom > minBigZoom ? data.alt[0].length : 1) * width : minWidth},
                         fill: "blue"
                     });
             }
@@ -159,7 +160,7 @@ $(function() {
                 return xScale(data.position);
             },
             height: function(data) {return data.hom ? vcfH : vcfH / 2},
-            width: width > minWidth ? width : minWidth,
+            width: function(data) {return width > minWidth ? (zoom > minBigZoom ? data.alt[0].length : 1) * width : minWidth},
             fill: "red"
         });
 
@@ -168,18 +169,19 @@ $(function() {
             y: vcfH / 2 + axisPadding,
             x: function (data, i) {return xScale(data.position)},
             height: vcfH / 2,
-            width: width > minWidth ? width : minWidth,
+            width: function(data) {return width > minWidth ? (zoom > minBigZoom ? data.alt[0].length : 1) * width : minWidth},
             fill: function (data) {return data.hom ? "red" : "blue"}
         });
 
         g.selectAll("text.alt-label")
             .attr({
-                y:axisPadding + vcfH / 4,
-                x:function (data, i) {return xScale(data.position) + width/2},
+                y:axisPadding + vcfH / 2,
+                x:function (data, i) {return xScale(data.position) + data.alt[0].length * width / 2},
                 fill:"white",
                 'font-size':width < 32 ? width.toFixed() + 'px' : 32 + 'px',
                 'font-family':'sans-serif',
-                'text-anchor':'middle'
+                'text-anchor':'middle',
+                'letter-spacing' : width / 2
             })
             .text(function(data) {return width > 1 ? data.alt[0] : ""});
 
@@ -202,50 +204,50 @@ $(function() {
             //Get this bar's x/y values, then augment for the tooltip
             var e = d3.event;
 
-            d3.select("#tooltip")
+            d3.select(".tooltip")
                 .style("left", e.clientX + "px")
                 .style("top", e.clientY + "px")
-                .select("#ref").text(data.ref);
-            d3.select("#tooltip").select("#alt").text(data.alt.join(", "));
-            d3.select("#tooltip").select("#pos").text(data.position);
+                .select(".ref-tooltip").text(data.ref);
+            d3.select(".tooltip").select(".alt-tooltip").text(data.alt.join(", "));
+            d3.select(".tooltip").select(".pos").text(data.position);
 
-            d3.select("#tooltip").classed("hidden", false);
+            d3.select(".tooltip").classed("hidden", false);
         }).on("mouseout", function() {
-            d3.select("#tooltip").classed("hidden", true);
+            d3.select(".tooltip").classed("hidden", true);
         });
     }
 
     loadVariations(chrId, from, to, false);
-    $('#chrId').val(chrId);
-    $('#from').val(from);
-    $('#to').val(to);
-    $("#zoom").val(zoom);
+    $('.chrId').val(chrId);
+    $('.from').val(from);
+    $('.to').val(to);
+    $(".zoom").val(zoom);
 
-    $("button#search").on("click", function(e) {
+    $("button.search").on("click", function(e) {
         e.preventDefault();
-        chrId = $('#chrId').val();
-        from = parseInt($('#from').val());
-        to = parseInt($('#to').val());
+        chrId = $('.chrId').val();
+        from = parseInt($('.from').val());
+        to = parseInt($('.to').val());
 
         loadVariations(chrId, from, to, true);
     });
 
     function zoomIn() {
         zoom++;
-        $("#zoom").val(zoom);
+        $(".zoom").val(zoom);
         browseFrame /= 2;
         to = Math.ceil(from + browseFrame);
-        $('#to').val(to);
+        $('.to').val(to);
         loadVariations(chrId, from, to, true);
     }
 
     function zoomOut() {
         if (zoom > 1) {
             zoom--;
-            $("#zoom").val(zoom);
+            $(".zoom").val(zoom);
             browseFrame *= 2;
             to = Math.ceil(from + browseFrame);
-            $('#to').val(to);
+            $('.to').val(to);
             loadVariations(chrId, from, to, true);
         }
     }
@@ -253,8 +255,8 @@ $(function() {
     function moveRight() {
         from += Math.ceil(browseFrame / 2);
         to += Math.ceil(browseFrame / 2);
-        $('#to').val(to);
-        $('#from').val(from);
+        $('.to').val(to);
+        $('.from').val(from);
         if (rightBuffer.length > 0 && rightBuffer[rightBuffer.length - 1].position >= to && ENABLE_CACHING) {
             console.log("using cache");
             _retreiveFromBuffer(true);
@@ -268,8 +270,8 @@ $(function() {
         if (to - Math.ceil(browseFrame / 2) > 0 && from > 0) {
             from = from - Math.ceil(browseFrame / 2) > 0 ? from - Math.ceil(browseFrame / 2) : 0;
             to -= Math.ceil(browseFrame / 2);
-            $('#to').val(to);
-            $('#from').val(from);
+            $('.to').val(to);
+            $('.from').val(from);
             if (leftBuffer.length > 0 && leftBuffer[0].position <= from && ENABLE_CACHING) {
                 console.log("using cache");
                 _retreiveFromBuffer(false);
@@ -340,22 +342,22 @@ $(function() {
         }
     }
 
-    $("button#zoom_out").on("click", function(e) {
+    $("button.zoom_out").on("click", function(e) {
         e.preventDefault();
         zoomOut();
     });
 
-    $("button#zoom_in").on("click", function(e) {
+    $("button.zoom_in").on("click", function(e) {
         e.preventDefault();
         zoomIn();
     });
 
-    $("button#moveRight").on("click", function (e) {
+    $("button.moveRight").on("click", function (e) {
         e.preventDefault();
         moveRight();
     });
 
-    $("button#moveLeft").on("click", function (e) {
+    $("button.moveLeft").on("click", function (e) {
         e.preventDefault();
         moveLeft();
     });
