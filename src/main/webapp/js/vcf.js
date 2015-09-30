@@ -99,8 +99,17 @@ $(function() {
             .domain([from, to])
             .range([0, W - padding]);
 
-        var groups = svgVcf.selectAll("g.vcf").data(data, position);
+        var variationWidth = function(data) {
+            var widthC;
+            if (zoom > minBigZoom) {
+                widthC = data.alt.length > 0 ? data.alt[0].length : data.ref.length;
+            } else {
+                widthC = 1;
+            }
+            return width > minWidth ? widthC * width : minWidth
+        };
 
+        var groups = svgVcf.selectAll("g.vcf").data(data, position);
         // who enter
         var g = groups.enter().append("g").attr("class", "vcf");
         var width = zoom > minBigZoom ? W / (to - from) : 1;
@@ -110,20 +119,20 @@ $(function() {
             y: axisPadding,
             x: function (data, i) {return xScale(data.position)},
             height: function(data) {return data.hom ? vcfH : vcfH / 2},
-            width: function(data) {return width > minWidth ? (zoom > minBigZoom ? data.alt[0].length : 1) * width : minWidth},
-            fill: "red"
+            width: variationWidth,
+            fill: function (data) {return data.alt.length == 0 ? "gray" : "red"}
         });
 
         g.datum(function(d) {
+            var _g = d3.select(this);
             if (!d.hom) {
-                var _g = d3.select(this);
                 _g.append("rect")
                     .attr({
                         class:"alt",
                         y: vcfH / 2 + axisPadding,
                         x: function (data, i) {return xScale(data.position)},
                         height:vcfH / 2,
-                        width: function(data) {return width > minWidth ? (zoom > minBigZoom ? data.alt[0].length : 1) * width : minWidth},
+                        width: variationWidth,
                         fill: "blue"
                     });
             }
@@ -143,7 +152,7 @@ $(function() {
             .attr({
                 class:"alt-label",
                 y:axisPadding + vcfH / 4,
-                x:function (data, i) {return xScale(data.position) + width/2},
+                x:function (data, i) {return xScale(data.position) + (data.alt.length > 0 ? data.alt[0].length : data.ref.length) * width / 2},
                 fill:"white",
                 'font-size':width < 32 ? width.toFixed() + 'px' : 32 + 'px',
                 'font-family':'sans-serif',
@@ -160,8 +169,8 @@ $(function() {
                 return xScale(data.position);
             },
             height: function(data) {return data.hom ? vcfH : vcfH / 2},
-            width: function(data) {return width > minWidth ? (zoom > minBigZoom ? data.alt[0].length : 1) * width : minWidth},
-            fill: "red"
+            width: variationWidth,
+            fill: function (data) {return data.alt.length == 0 ? "gray" : "red"}
         });
 
         g.selectAll("rect.alt").attr({
@@ -169,14 +178,14 @@ $(function() {
             y: vcfH / 2 + axisPadding,
             x: function (data, i) {return xScale(data.position)},
             height: vcfH / 2,
-            width: function(data) {return width > minWidth ? (zoom > minBigZoom ? data.alt[0].length : 1) * width : minWidth},
+            width: variationWidth,
             fill: function (data) {return data.hom ? "red" : "blue"}
         });
 
         g.selectAll("text.alt-label")
             .attr({
                 y:axisPadding + vcfH / 2,
-                x:function (data, i) {return xScale(data.position) + data.alt[0].length * width / 2},
+                x:function (data, i) {return xScale(data.position) + (data.alt.length > 0 ? data.alt[0].length : data.ref.length) * width / 2},
                 fill:"white",
                 'font-size':width < 32 ? width.toFixed() + 'px' : 32 + 'px',
                 'font-family':'sans-serif',
