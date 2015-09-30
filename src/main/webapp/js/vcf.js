@@ -314,10 +314,12 @@ $(function() {
         for (i = 0; i < vcfData.length; i++) {
             if (right) {
                 if (vcfData[i].position > from) {
-                    if (i > 2) {
-                        vcfData.splice(0, i - 1).forEach(function(item) { toBuf.push(item) });
-                    } else {
-                        vcfData.splice(0, 1).forEach(function(item) { toBuf.push(item) });
+                    if (i > 0) {
+                        if (i > 1) {
+                            vcfData.splice(0, i - 1).forEach(function(item) { toBuf.push(item) });
+                        } else {
+                            vcfData.splice(0, 1).forEach(function(item) { toBuf.push(item) });
+                        }
                     }
                     break;
                 }
