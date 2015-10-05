@@ -99,10 +99,18 @@ $(function() {
             .domain([from, to])
             .range([0, W - padding]);
 
-        var variationWidth = function(data) {
+        var variationWidth = function(data, deletion) {
             var widthC;
             if (zoom > minBigZoom) {
-                widthC = data.alt.length > 0 ? data.alt[0].length : data.ref.length;
+                if (data.alt.length > 0) {
+                    if (data.alt[0].length < data.ref.length && deletion) { // a deleteion
+                        widthC = data.ref.length - data.alt[0].length;
+                    } else {
+                        widthC = data.alt[0].length;
+                    }
+                } else {
+                    widthC = data.ref.length;
+                }
             } else {
                 widthC = 1;
             }
@@ -136,17 +144,22 @@ $(function() {
                         fill: "blue"
                     });
             }
+
+            //if (zoom > minBigZoom) {  // TODO: draw it only on big zoom
+                if (d.alt.length > 0 && d.alt[0].length < d.ref.length) { // a deletion of multiple
+                    _g.append("rect")
+                        .attr({
+                            class:"deletion",
+                            y: axisPadding,
+                            x: function(d) {return variationWidth(d) + xScale(d.position)},
+                            height: vcfH,
+                            width: function(d) {return zoom > minBigZoom ? variationWidth(d, true) : 0},
+                            fill: "gray"
+                        });
+                }
+            //}
             return d;
         });
-        /*g.append("rect")
-            .attr({
-                class:"alt",
-                y: vcfH / 2 + axisPadding,
-                x: function (data, i) {return xScale(data.position)},
-                height:vcfH / 2,
-                width: width > minWidth ? width : minWidth,
-                fill: function (data) {return data.hom ? "red" : "blue"}
-            });*/
 
         g.append("text")
             .attr({
@@ -181,6 +194,33 @@ $(function() {
             width: variationWidth,
             fill: function (data) {return data.hom ? "red" : "blue"}
         });
+
+        g.selectAll("rect.deletion").attr({
+            class:"deletion",
+            y: axisPadding,
+            x: function (data, i) {return variationWidth(data) + xScale(data.position)},
+            height: vcfH,
+            width: function(d) {return zoom > minBigZoom ? variationWidth(d, true) : 0},
+            fill: 'gray'
+        });
+
+        /*g.datum(function(d) {  // TODO: draw it only on big zoom
+            var _g = d3.select(this);
+            if (zoom > minBigZoom && g.selectAll("rect.deletion").length == 0) {
+                if (d.alt.length > 0 && d.alt[0].length < d.ref.length) { // a deletion of multiple
+                    _g.append("rect")
+                        .attr({
+                            class:"deletion",
+                            y: axisPadding,
+                            x: function(d) {return variationWidth(d) + xScale(d.position)},
+                            height: vcfH,
+                            width: function(d) {return variationWidth(d, true)},
+                            fill: "gray"
+                        });
+                }
+            }
+            return d;
+        });*/
 
         g.selectAll("text.alt-label")
             .attr({

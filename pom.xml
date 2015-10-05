@@ -135,7 +135,7 @@
         <dependency>
             <groupId>com.github.samtools</groupId>
             <artifactId>htsjdk</artifactId>
-            <version>1.129</version>
+            <version>1.139</version>
         </dependency>
 
         <!-- Test dependencies -->

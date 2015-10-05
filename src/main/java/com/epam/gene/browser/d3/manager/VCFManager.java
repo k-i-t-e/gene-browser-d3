@@ -2,16 +2,20 @@ package com.epam.gene.browser.d3.manager;
 
 import com.epam.gene.browser.d3.vo.BrowseRequest;
 import com.epam.gene.browser.d3.vo.Variant;
+import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.CloseableTribbleIterator;
 import htsjdk.tribble.FeatureReader;
 import htsjdk.tribble.index.Index;
 import htsjdk.tribble.index.IndexFactory;
 import htsjdk.tribble.index.interval.IntervalTreeIndex;
+import htsjdk.tribble.index.tabix.TabixFormat;
+import htsjdk.tribble.index.tabix.TabixIndex;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
+import htsjdk.variant.vcf.VCFFileReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -69,7 +73,7 @@ public class VCFManager {
         VCFCodec codec = new VCFCodec();
 
         String fileName = "Felis_catus.vcf";
-        //String fileName = "YRI.trio.2010_03.genotypes.vcf";
+        //String fileName = "YRI.trio.2010_03.genotypes.vcf.gz";
 
         File indexFile = new File(fileName + ".idx");
         Index index;
@@ -79,12 +83,30 @@ public class VCFManager {
             index = createIndex(fileName, codec);
         }
 
-        /*File indexFile = new File("Felis_catus.vcf.gz.tbi");
-        TabixIndex tabixIndex = new TabixIndex(indexFile);*/
+
+        /*File file = new File(fileName);
+        File indexFile = new File(fileName + ".tbi");
+        if (!indexFile.exists() || indexFile.isDirectory()) {
+            VCFFileReader reader = new VCFFileReader(file, false);
+            String indexFileName = createTabixIndex(fileName, codec, reader);
+            indexFile = new File(indexFileName);
+        }*/
+
+        //File indexFile = new File("Felis_catus.vcf.gz.tbi");
+        //TabixIndex index = new TabixIndex(indexFile);
+
+        //VCFFileReader reader = new VCFFileReader(file, indexFile, true);
+
+        /*VCFFileReader reader = new VCFFileReader(new IntervalTreeIndex(fileName).getIndexedFile(),
+                new IntervalTreeIndex("Felis_catus.vcf.gz.tbi").getIndexedFile(), true);*/
+
+        /*FeatureReader<VariantContext> reader = AbstractFeatureReader.getFeatureReader(fileName,
+                indexFile.getAbsolutePath(), codec, true);*/
+        //CloseableTribbleIterator<VariantContext> iterator = reader.iterator();
+
 
         FeatureReader<VariantContext> reader = AbstractFeatureReader.getFeatureReader(fileName, codec, index);
-
-        CloseableTribbleIterator<VariantContext> iterator = reader.iterator();
+        CloseableIterator<VariantContext> iterator = reader.iterator();
 
         iterator = reader.query(request.getChrId(), request.getFrom(), request.getTo());
 
@@ -149,5 +171,15 @@ public class VCFManager {
         IndexFactory.writeIndex(intervalTreeIndex, indexFile); // Write it to a file
 
         return intervalTreeIndex;
+    }
+
+    private String createTabixIndex(String fileName, VCFCodec codec, VCFFileReader reader) throws IOException {
+        File file = new File(fileName);
+        TabixIndex idx = IndexFactory.createTabixIndex(file, new VCFCodec(), TabixFormat.VCF, reader.getFileHeader().getSequenceDictionary());
+
+        File indexFile = new File(fileName + ".tbi");
+        idx.write(indexFile);
+
+        return fileName + ".tbi";
     }
 }
