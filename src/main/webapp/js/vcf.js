@@ -301,9 +301,9 @@ $(function() {
         }
     }
 
-    function moveRight() {
-        from += Math.ceil(browseFrame / 2);
-        to += Math.ceil(browseFrame / 2);
+    function moveRight(amount) {
+        from += Math.ceil(amount);
+        to += Math.ceil(amount);
         $('.to').val(to);
         $('.from').val(from);
         if (rightBuffer.length > 0 && rightBuffer[rightBuffer.length - 1].position >= to && ENABLE_CACHING) {
@@ -315,10 +315,16 @@ $(function() {
         }
     }
 
-    function moveLeft() {
-        if (to - Math.ceil(browseFrame / 2) > 0 && from > 0) {
-            from = from - Math.ceil(browseFrame / 2) > 0 ? from - Math.ceil(browseFrame / 2) : 0;
-            to -= Math.ceil(browseFrame / 2);
+    function moveLeft(amount) {
+        if (to - Math.ceil(amount) > 0 && from > 0) {
+            if (from > Math.ceil(amount)) {
+                from -= Math.ceil(amount);
+                to -= Math.ceil(amount);
+            } else {
+                to -= from;
+                from = 0;
+            }
+
             $('.to').val(to);
             $('.from').val(from);
             if (leftBuffer.length > 0 && leftBuffer[0].position <= from && ENABLE_CACHING) {
@@ -393,6 +399,51 @@ $(function() {
         }
     }
 
+    var isDragged = false;
+    /*$("div.variation_plot")
+        .on("mousedown", function() {
+            isDragged = false;
+        })
+        .on("mouseup", function(e) {
+            var wasDragged = isDragged;
+            isDragged = false;
+            if (wasDragged) {
+                alert("Dragged " + e.pageX + "pixels");
+            }
+        })
+        .on("mousemove", function() {
+            isDragged = true;
+        });*/
+
+    $("div.variation_plot")
+        .on("mousedown", function(e) {
+            isDragged = false;
+            var startX = e.pageX;
+            $(this)
+                .on("mousemove", function() {
+                    isDragged = true;
+                })
+                .on("mouseup", function(e) {
+                    $(this).off("mousemove");
+                    $(this).off("mouseup");
+                    var wasDragged = isDragged;
+                    isDragged = false;
+                    if (wasDragged) {
+                        //alert("Dragged " + (e.pageX - startX) + "pixels");
+                        drag((e.pageX - startX));
+                    }
+                });
+        })
+
+    function drag(amount) {
+        var zoomC = (to - from) / (W- padding);
+        if (amount < 0) {
+            moveRight(zoomC * amount * -1);
+        } else {
+            moveLeft(zoomC * amount);
+        }
+    }
+
     $("button.zoom_out").on("click", function(e) {
         e.preventDefault();
         zoomOut();
@@ -405,11 +456,11 @@ $(function() {
 
     $("button.moveRight").on("click", function (e) {
         e.preventDefault();
-        moveRight();
+        moveRight(browseFrame / 2);
     });
 
     $("button.moveLeft").on("click", function (e) {
         e.preventDefault();
-        moveLeft();
+        moveLeft(browseFrame / 2);
     });
 });

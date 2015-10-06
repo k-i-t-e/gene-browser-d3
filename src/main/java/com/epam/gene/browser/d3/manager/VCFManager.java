@@ -72,7 +72,7 @@ public class VCFManager {
     public List<Variant> readVcf(BrowseRequest request) throws IOException {
         VCFCodec codec = new VCFCodec();
 
-        String fileName = "Felis_catus.vcf";
+        String fileName = "/home/kite/workspace/gradle_sample/Felis_catus.vcf";
         //String fileName = "YRI.trio.2010_03.genotypes.vcf.gz";
 
         File indexFile = new File(fileName + ".idx");
