@@ -401,21 +401,6 @@ $(function() {
 
     var isDragged = false;
     /*$("div.variation_plot")
-        .on("mousedown", function() {
-            isDragged = false;
-        })
-        .on("mouseup", function(e) {
-            var wasDragged = isDragged;
-            isDragged = false;
-            if (wasDragged) {
-                alert("Dragged " + e.pageX + "pixels");
-            }
-        })
-        .on("mousemove", function() {
-            isDragged = true;
-        });*/
-
-    $("div.variation_plot")
         .on("mousedown", function(e) {
             isDragged = false;
             var startX = e.pageX;
@@ -433,10 +418,28 @@ $(function() {
                         drag((e.pageX - startX));
                     }
                 });
-        })
+        })*/
+
+    var $dragging = null;
+    var startX;
+    $(document.body).on("mousemove", function(e) {
+        if ($dragging) {
+            drag((e.pageX - startX));
+            console.log("dragging + "+e.pageX + ": " + startX);
+        }
+    });
+
+    $(document.body).on("mousedown", "div.variation_plot", function (e) {
+        $dragging = $(e.target);
+        startX = e.pageX;
+    });
+
+    $(document.body).on("mouseup", function (e) {
+        $dragging = null;
+    });
 
     function drag(amount) {
-        var zoomC = (to - from) / (W- padding);
+        var zoomC = (to - from) / (5*(W - padding));
         if (amount < 0) {
             moveRight(zoomC * amount * -1);
         } else {
