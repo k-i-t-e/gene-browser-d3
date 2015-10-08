@@ -391,11 +391,12 @@ $(function() {
             }
         }
 
-        vcfData = vcfData.concat(fromBuf);
         if (right) {
+            vcfData = vcfData.concat(fromBuf);
             leftBuffer = leftBuffer.concat(toBuf);
         } else{
-            rightBuffer = rightBuffer.concat(toBuf);
+            vcfData = fromBuf.concat(vcfData);
+            rightBuffer = toBuf.concat(rightBuffer);
         }
     }
 
