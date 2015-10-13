@@ -38,29 +38,7 @@ $(function() {
 
         var groups = svg.selectAll("g").data(data, position);
 
-        /*groups.enter().append("rect").attr({
-            x: function(data) {return xScale(data.start)},
-            y: 0,
-            width: function(data) {return xScale(data.end) - xScale(data.start) < 1 ? 1 : xScale(data.end) - xScale(data.start)},
-            height: H,
-            fill: function(data) {
-                switch (data.stain) {
-                    case 'GNEG': {return '#eee'}
-                    case 'ACEN': {return '#f00'}
-                    case 'GPOS25' || 'GPOS50' || 'GPOS75' || 'GPOS100' || 'GVAR' : {return '#000'}
-                    case 'STALK' : {return '#00f'}
-                }
-            },
-            'fill-opacity': function (data) {
-                if (data.stain == 'GPOS25' || data.stain == 'GPOS50' || data.stain == 'GPOS75' || data.stain == 'GPOS100') {
-                    var stainVal = data.stain.substr(4);
-                    return stainVal / 100;
-                } else {
-                    return 1;
-                }
-            }
-        });*/
-
+        // Enter
         var g = groups.enter().append("g").attr("class", "cyto");
         var times = 0;
         g.datum(function(d) {
@@ -70,7 +48,7 @@ $(function() {
                 _g.append("polygon").attr({
                     points: function(data) {
                         var x1 = xScale(data.start);
-                        var x2 = xScale(data.end) != x1 ? xScale(data.end) : 1;
+                        var x2 = xScale(data.end) != x1 ? xScale(data.end) : (x1 + 1);
                         if (times == 0) {
                             times++;
                             return x1 + ",0 " + x1 + ",20 "+ x2 +", 10";
@@ -83,30 +61,87 @@ $(function() {
                     stroke:'black'
                 });
             } else {
-                _g.append("rect").attr({
-                    x: function(data) {return xScale(data.start)},
-                    y: 0,
-                    width: function(data) {return xScale(data.end) - xScale(data.start) < 1 ? 1 : xScale(data.end) - xScale(data.start)},
-                    height: H,
-                    fill: function(data) {
-                        switch (data.stain) {
-                            case 'GNEG': {return '#eee'}
-                            case 'GPOS25' || 'GPOS50' || 'GPOS75' || 'GPOS100' || 'GVAR' : {return '#000'}
-                            case 'STALK' : {return '#00f'}
-                        }
-                    },
-                    'fill-opacity': function (data) {
-                        if (data.stain == 'GPOS25' || data.stain == 'GPOS50' || data.stain == 'GPOS75' || data.stain == 'GPOS100') {
-                            var stainVal = data.stain.substr(4);
-                            return stainVal / 100;
-                        } else {
-                            return 1;
-                        }
-                    },
-                    'stroke-width':1,
-                    stroke:'black'
-                });
+                if (d.stain == 'STALK') {
+                    var x1 = xScale(d.start);
+                    var x2 = xScale(d.end) != x1 ? xScale(d.end) : (x1 + 1);
+
+                    if (x2 > x1 + 11) {
+                        _g.append("polygon").attr({
+                                points: function(data) {return x1 + ",0 " + x1 + ",20 "+ (x1 + 5) +", 10"},
+                                'stroke-width':1,
+                                fill:'#eee',
+                                stroke:'black'
+                            });
+                        _g.append("polygon").attr({
+                                points: function(data) {return (x2 - 5) + ", 10 " + x2 + ",0 " + x2 + ",20 "},
+                                'stroke-width':1,
+                                fill:'#eee',
+                                stroke:'black'
+                            });
+                        _g.append("line").attr({
+                            x1: x1 + 5,
+                            y1: H/2,
+                            x2: x2 - 5,
+                            y2: H/2,
+                            'stroke-width':1,
+                            stroke:'black'
+                        });
+                    } else {
+                        _g.append("line").attr({
+                            x1: x1 + 5,
+                            y1: H/2,
+                            x2: x2 - 5,
+                            y2: H/2,
+                            'stroke-width':1,
+                            stroke:'black'
+                        });
+                    }
+                } else {
+                    _g.append("rect").attr({
+                        x: function(data) {return xScale(data.start)},
+                        y: 0,
+                        width: function(data) {return xScale(data.end) - xScale(data.start) < 1 ? 1 : xScale(data.end) - xScale(data.start)},
+                        height: H,
+                        fill: function(data) {
+                            switch (data.stain) {
+                                case 'GNEG': {return '#eee'}
+                                case 'GPOS25' || 'GPOS50' || 'GPOS75' || 'GPOS100' || 'GVAR' : {return '#000'}
+                            }
+                        },
+                        'fill-opacity': function (data) {
+                            if (data.stain == 'GPOS25' || data.stain == 'GPOS50' || data.stain == 'GPOS75' || data.stain == 'GPOS100') {
+                                var stainVal = data.stain.substr(4);
+                                return stainVal / 100;
+                            } else {
+                                return 1;
+                            }
+                        },
+                        'stroke-width':1,
+                        stroke:'black'
+                    });
+                }
             }
+        });
+
+        // Exit
+        groups.exit().remove();
+    }
+
+    function _drawCent(_g) {
+        _g.append("polygon").attr({
+            points: function(data) {
+                var x1 = xScale(data.start);
+                var x2 = xScale(data.end) != x1 ? xScale(data.end) : (x1 + 1);
+                if (times == 0) {
+                    times++;
+                    return x1 + ",0 " + x1 + ",20 "+ x2 +", 10";
+                } else {
+                    return x1 +", 10 " + x2 + ",0 " + x2 + ",20 ";
+                }
+            },
+            'stroke-width':1,
+            fill:'#eee',
+            stroke:'black'
         });
     }
 });
