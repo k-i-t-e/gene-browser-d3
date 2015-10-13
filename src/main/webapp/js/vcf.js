@@ -103,7 +103,7 @@ $(function() {
             var widthC;
             if (zoom > minBigZoom) {
                 if (data.alt.length > 0) {
-                    if (data.alt[0].length < data.ref.length && deletion) { // a deleteion
+                    if (data.alt[0].length < data.ref.length && deletion) { // a deletion
                         widthC = data.ref.length - data.alt[0].length;
                     } else {
                         widthC = data.alt[0].length;
@@ -399,27 +399,6 @@ $(function() {
             rightBuffer = toBuf.concat(rightBuffer);
         }
     }
-
-    var isDragged = false;
-    /*$("div.variation_plot")
-        .on("mousedown", function(e) {
-            isDragged = false;
-            var startX = e.pageX;
-            $(this)
-                .on("mousemove", function() {
-                    isDragged = true;
-                })
-                .on("mouseup", function(e) {
-                    $(this).off("mousemove");
-                    $(this).off("mouseup");
-                    var wasDragged = isDragged;
-                    isDragged = false;
-                    if (wasDragged) {
-                        //alert("Dragged " + (e.pageX - startX) + "pixels");
-                        drag((e.pageX - startX));
-                    }
-                });
-        })*/
 
     var $dragging = null;
     var startX;
