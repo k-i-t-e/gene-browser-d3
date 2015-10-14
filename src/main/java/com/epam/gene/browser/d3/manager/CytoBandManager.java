@@ -2,11 +2,11 @@ package com.epam.gene.browser.d3.manager;
 
 import com.epam.gene.browser.d3.vo.CytoBand;
 import com.epam.gene.browser.d3.vo.GiemsaStain;
+import javafx.util.Pair;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -31,17 +31,27 @@ public class CytoBandManager {
         List<CytoBand> bands = new ArrayList<>();
 
         BufferedReader br = null;
+        Map<String, List<Integer>> indexMap = new LinkedHashMap<>();
         try {
             br = new BufferedReader(new InputStreamReader(new FileInputStream(FILE_NAME)));
+
+            int i = 0;
+            String prevChr = null;
+            String prevStr = "";
             while (true) {
                 String str = br.readLine();
                 if (str == null) {
                     break;
+                } else {
+                    prevStr = str;
                 }
 
                 String[] fields = str.split("\t");
                 CytoBand band = new CytoBand();
                 band.setChr(fields[0]);
+
+                prevChr = putIndex(indexMap, i, prevChr, fields[0], str.length());
+                i += str.length();
 
                 if (!chr.equals(fields[0])) {
                     continue;
@@ -54,6 +64,10 @@ public class CytoBandManager {
 
                 bands.add(band);
             }
+
+            putIndex(indexMap, i, prevChr, "", prevStr.length());
+
+            writeIndex(indexMap);
         } finally {
             if (br != null) {
                 try {
@@ -65,5 +79,56 @@ public class CytoBandManager {
         }
 
         return bands;
+    }
+
+    private String putIndex(Map<String, List<Integer>> indexMap, int i, String prevChr, String currChr, int next) {
+        if (prevChr == null) {
+            List<Integer> indexes = new ArrayList<>();
+            indexes.add(i);
+            indexMap.put(currChr, indexes);
+
+            prevChr = currChr;
+            return prevChr;
+        }
+
+        if (!currChr.equals(prevChr)) {
+            if (!indexMap.containsKey(prevChr)) {
+                indexMap.put(prevChr, new ArrayList<>());
+            }
+
+            indexMap.get(prevChr).add(i - next);
+
+            if (!currChr.isEmpty()) {
+                List<Integer> indexes = new ArrayList<>();
+                indexes.add(i);
+                indexMap.put(currChr, indexes);
+                prevChr = currChr;
+            }
+        }
+
+        return prevChr;
+    }
+
+    private void writeIndex(Map<String, List<Integer>> indexMap) throws IOException {
+        BufferedWriter writer = null;
+        try {
+            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(FILE_NAME + ".idx")));
+
+            for (Map.Entry<String, List<Integer>> entry : indexMap.entrySet()) {
+                writer.write(String.format("%s\t%d\t%d", entry.getKey(), entry.getValue().get(0),
+                        entry.getValue().get(1)));
+                writer.newLine();
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }
