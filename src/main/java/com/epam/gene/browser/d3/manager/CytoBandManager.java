@@ -25,16 +25,68 @@ import java.util.*;
 @Service
 public class CytoBandManager {
     private static final String FILE_NAME = "/home/kite/workspace/gene-browser-d3/cytoBand.txt";
+    private static final boolean USE_INDEX = true;
     //private static final String FILE_NAME = "/home/kite/workspace/gene-browser-d3/cytoBandIdeo.txt";
 
     public List<CytoBand> readCytoBand(String chr) throws IOException {
-        List<CytoBand> bands = new ArrayList<>();
+        File indexFile = new File(FILE_NAME + ".idx");
+        if (indexFile.exists() && ! indexFile.isDirectory() && USE_INDEX) {
+            return readWithIndex(chr);
+        } else {
+            return readNoIndex(chr, true);
+        }
+    }
 
+    private List<CytoBand> readWithIndex(String chr) throws IOException {
+        List<CytoBand> bands = new ArrayList<>();
         BufferedReader br = null;
-        Map<String, List<Integer>> indexMap = new LinkedHashMap<>();
         try {
             br = new BufferedReader(new InputStreamReader(new FileInputStream(FILE_NAME)));
 
+            Map<String, List<Integer>> indexMap = readIndex();
+
+            int from = indexMap.get(chr).get(0);
+            int to = indexMap.get(chr).get(1);
+
+            br.skip(from);
+
+            char[] buf = new char[to - from];
+            br.read(buf, 0, to - from);
+            String str = new String(buf);
+
+            String[] strings = str.split("\n");
+            for (String s : strings) {
+                String[] fields = s.split("\t");
+                CytoBand band = new CytoBand();
+                band.setChr(fields[0]);
+
+                if (!chr.equals(fields[0])) {
+                    continue;
+                }
+
+                band.setStart(Long.parseLong(fields[1]));
+                band.setEnd(Long.parseLong(fields[2]));
+                band.setName(fields[3]);
+                band.setStain(GiemsaStain.valueOf(fields[4].toUpperCase()));
+
+                bands.add(band);
+            }
+        } finally {
+            if (br != null) {
+                br.close();
+            }
+        }
+
+        return bands;
+    }
+
+    private List<CytoBand> readNoIndex(String chr, boolean writeIndex) throws IOException {
+        List<CytoBand> bands = new ArrayList<>();
+        Map<String, List<Integer>> indexMap = new LinkedHashMap<>();
+        BufferedReader br = null;
+
+        try {
+            br = new BufferedReader(new InputStreamReader(new FileInputStream(FILE_NAME)));
             int i = 0;
             String prevChr = null;
             String prevStr = "";
@@ -51,7 +103,7 @@ public class CytoBandManager {
                 band.setChr(fields[0]);
 
                 prevChr = putIndex(indexMap, i, prevChr, fields[0], str.length());
-                i += str.length();
+                i += (str.length() + 1);
 
                 if (!chr.equals(fields[0])) {
                     continue;
@@ -67,14 +119,12 @@ public class CytoBandManager {
 
             putIndex(indexMap, i, prevChr, "", prevStr.length());
 
-            writeIndex(indexMap);
+            if (writeIndex) {
+                writeIndex(indexMap);
+            }
         } finally {
             if (br != null) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                br.close();
             }
         }
 
@@ -96,7 +146,7 @@ public class CytoBandManager {
                 indexMap.put(prevChr, new ArrayList<>());
             }
 
-            indexMap.get(prevChr).add(i - next);
+            indexMap.get(prevChr).add(i);
 
             if (!currChr.isEmpty()) {
                 List<Integer> indexes = new ArrayList<>();
@@ -130,5 +180,39 @@ public class CytoBandManager {
                 }
             }
         }
+    }
+
+    private Map<String, List<Integer>> readIndex() throws IOException {
+        BufferedReader reader = null;
+        Map<String, List<Integer>> indexMap = new LinkedHashMap<>();
+        try {
+            reader = new BufferedReader(new FileReader(FILE_NAME + ".idx"));
+            while (true) {
+                String str = reader.readLine();
+                if (str == null) {
+                    break;
+                }
+
+                String[] fields = str.split("\t");
+
+                List<Integer> list = new ArrayList<>();
+                list.add(Integer.parseInt(fields[1]));
+                list.add(Integer.parseInt(fields[2]));
+
+                indexMap.put(fields[0], list);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return indexMap;
     }
 }
